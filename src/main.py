@@ -3,48 +3,20 @@ This module contains the main entry point for the FastMCP server.
 """
 
 import uuid
-from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager
 from typing import Any
 
-import psycopg
 import yaml
-from mcp.server.fastmcp import Context, FastMCP
-from psycopg import Connection
+from mcp.server.fastmcp import FastMCP
 from psycopg.rows import dict_row
 
 from utils.config import get_config
-from utils.types import AppContext, Column, DatabaseSummary, Table, TableSummary
+from utils.db import get_db_connection
+from utils.types import Column, DatabaseSummary, Table, TableSummary
 
 config = get_config()
 
 
-@asynccontextmanager
-async def app_lifespan(server: FastMCP) -> AsyncIterator[AppContext]:
-    """
-    Context manager to create a database connection
-
-    Args:
-        server: The FastMCP server
-
-    Returns:
-        The context of the app
-    """
-    db_connection = psycopg.connect(
-        host=config.db_host,
-        port=config.db_port,
-        user=config.db_user,
-        password=config.db_password.get_secret_value(),
-        dbname=config.db_name,
-        row_factory=dict_row,  # type: ignore
-    )
-    try:
-        yield AppContext(db_connection=db_connection)
-    finally:
-        db_connection.close()
-
-
-mcp = FastMCP(config.app_name, lifespan=app_lifespan)
+mcp = FastMCP(config.app_name)
 
 
 # Database description resource
@@ -59,14 +31,7 @@ async def get_schema_description(schema: str) -> str:
     Returns:
         The description of the schema in YAML format
     """
-    db_connection = psycopg.connect(
-        host=config.db_host,
-        port=config.db_port,
-        user=config.db_user,
-        password=config.db_password.get_secret_value(),
-        dbname=config.db_name,
-    )
-    with db_connection as conn:
+    with get_db_connection() as conn:
         with conn.cursor() as cursor:
             query = """
                 SELECT
@@ -83,7 +48,6 @@ async def get_schema_description(schema: str) -> str:
             """
             cursor.execute(query, {"schema": schema})
             tables = cursor.fetchall()
-    db_connection.close()
     # Map the tables into a DatabaseSummary
     db_summary = DatabaseSummary(
         tables=[
@@ -113,14 +77,7 @@ async def get_table_description(schema: str, table: str) -> str:
     Returns:
         The description of the table in YAML format
     """
-    db_connection = psycopg.connect(
-        host=config.db_host,
-        port=config.db_port,
-        user=config.db_user,
-        password=config.db_password.get_secret_value(),
-        dbname=config.db_name,
-    )
-    with db_connection as conn:
+    with get_db_connection() as conn:
         with conn.cursor() as cursor:
             query = """
                 SELECT
@@ -141,7 +98,6 @@ async def get_table_description(schema: str, table: str) -> str:
             """
             cursor.execute(query, {"schema": schema, "table": table})
             columns = cursor.fetchall()
-    db_connection.close()
     # Map the tables into a DatabaseSummary
     table_obj = Table(
         schema_name=schema,
@@ -165,7 +121,7 @@ async def get_table_description(schema: str, table: str) -> str:
 
 
 @mcp.tool()
-async def query_database(query: str, ctx: Context) -> str:
+async def query_database(query: str) -> str:
     """
     Tool to query the database
 
@@ -176,8 +132,7 @@ async def query_database(query: str, ctx: Context) -> str:
     Returns:
         The result of the query in YAML format
     """
-    db_connection: Connection = ctx.request_context.lifespan_context.db_connection
-    with db_connection as conn:
+    with get_db_connection(row_factory=dict_row) as conn:
         with conn.cursor() as cursor:
             cursor.execute(query)  # type: ignore
             rows: list[dict[str, Any]] = cursor.fetchall()  # type: ignore
@@ -231,8 +186,3 @@ def prompt_query_database(schema: str, table: str) -> str:
         table: The name of the table
     """
     return f"Please bring me the data from the table `{table}` in the schema `{schema}`"
-
-
-# if __name__ == "__main__":
-#     print("Starting FastMCP server...")
-#     mcp.run()

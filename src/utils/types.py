@@ -1,12 +1,8 @@
-from psycopg import Connection
+"""
+This module contains the types used in the project.
+"""
+
 from pydantic import BaseModel
-
-
-class AppContext(BaseModel):
-    db_connection: Connection
-
-    class Config:
-        arbitrary_types_allowed = True
 
 
 class TableSummary(BaseModel):
