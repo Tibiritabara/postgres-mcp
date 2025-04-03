@@ -31,10 +31,10 @@ jobs:
         run: uv sync --dev
 
       - name: Run ruff linting
-        run: ./.venv/bin/ruff check src/
+        run: ./.venv/bin/ruff check ./src
 
       - name: Run pyright type checking
-        run: pyright
+        run: ./.venv/bin/pyright ./src
 
   build-and-push:
     runs-on: ubuntu-latest
