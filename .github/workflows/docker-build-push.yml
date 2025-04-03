@@ -32,9 +32,13 @@ jobs:
 
       - name: Run ruff linting
         run: ./.venv/bin/ruff check ./src
+        env:
+          PYTHONPATH: ./src
 
       - name: Run pyright type checking
         run: ./.venv/bin/pyright ./src
+        env:
+          PYTHONPATH: ./src
 
   build-and-push:
     runs-on: ubuntu-latest
