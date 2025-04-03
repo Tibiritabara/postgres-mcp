@@ -12,7 +12,7 @@ WORKDIR /server
 
 # Add the user's local bin to the path
 ENV PATH="${PATH}:/home/server/.local/bin"
-ENV PYTHONPATH="${PYTHONPATH}:/server/src"
+ENV PYTHONPATH="/server/src"
 
 # Copy the pyproject.toml and uv.lock files
 COPY --chown=server:server ./pyproject.toml ./uv.lock ./
