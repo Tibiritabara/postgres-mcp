@@ -28,4 +28,4 @@ RUN --mount=from=ghcr.io/astral-sh/uv,source=/uv,target=/bin/uv \
 COPY --chown=server:server ./src /server/src
 
 # Command to run the application using the new main.py
-CMD ["./.venv/bin/python", "-m", "src.main"]
+CMD ["./.venv/bin/mcp", "run", "src/main.py"]
