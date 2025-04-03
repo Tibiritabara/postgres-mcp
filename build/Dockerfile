@@ -22,7 +22,7 @@ ENV UV_COMPILE_BYTECODE=1
 
 # Install dependencies
 RUN --mount=from=ghcr.io/astral-sh/uv,source=/uv,target=/bin/uv \
-    uv sync --frozen --no-cache
+    uv sync --frozen --no-cache --no-install-project
 
 # Copy the code to the container
 COPY --chown=server:server ./src /server/src
