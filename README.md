@@ -95,7 +95,32 @@ The application is configured using environment variables:
    python -m src.main
    ```
 
-3. The server will be available for LLMs to connect to and query your PostgreSQL database.
+3. The server will be available for LLMs to connect to and query your PostgreSQL database. With the server running, the MCP can be loaded into client applications for interaction.
+
+### Client Configuration
+
+To use this MCP in a client application, add the following configuration to your client's MCP configuration file (e.g., `.cursor/mcp.json`):
+
+```json
+{
+  "mcpServers": {
+    "postgres-mcp-server": {
+      "command": "/path/to/your/venv/bin/mcp",
+      "args": ["run", "/path/to/your/postgres-mcp/src/main.py"],
+      "env": {
+        "APP_NAME": "mcp-demo",
+        "DB_HOST": "localhost",
+        "DB_PORT": "5432",
+        "DB_USER": "postgres",
+        "DB_PASSWORD": "postgres",
+        "DB_NAME": "postgres"
+      }
+    }
+  }
+}
+```
+
+Be sure to replace the paths with the actual paths to your virtual environment and project directory, and update the environment variables to match your PostgreSQL configuration.
 
 ## Development
 
